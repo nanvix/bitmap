@@ -1,7 +1,7 @@
 # Copyright(c) The Maintainers of Nanvix.
 # Licensed under the MIT License.
 
-name: Build and Test
+name: x86 Debug
 
 on: push
 
@@ -23,8 +23,8 @@ jobs:
         port: ${{ secrets.portnum }}
         envs: TARGET_BRANCH
         script: |
-          rm -rf bitmap
-          git clone --recursive https://github.com/nanvix/bitmap.git --branch ${TARGET_BRANCH}
+          rm -rf bitmap-debug
+          git clone --recursive https://github.com/nanvix/bitmap.git --branch ${TARGET_BRANCH} bitmap-debug
 
   build:
     name: Build
@@ -40,29 +40,12 @@ jobs:
         port: ${{ secrets.portnum }}
         script: |
           source "$HOME/.cargo/env"
-          cd bitmap
-          cargo build --verbose
-
-  test:
-    name: Test
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: test
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.hostname }}
-        username: ${{ secrets.username }}
-        key: ${{ secrets.sshkey }}
-        port: ${{ secrets.portnum }}
-        script: |
-          source "$HOME/.cargo/env"
-          cd bitmap
-          cargo test --verbose
+          cd bitmap-debug
+          cargo build
 
   cleanup:
     name: Cleanup
-    needs: test
+    needs: build
     if: always()
     runs-on: ubuntu-latest
     steps:
@@ -74,7 +57,7 @@ jobs:
         key: ${{ secrets.sshkey }}
         port: ${{ secrets.portnum }}
         script: |
-          cd bitmap
+          cd bitmap-debug
           git checkout --force dev
           git clean -fdx
           git remote prune origin
